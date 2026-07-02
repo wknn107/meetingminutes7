@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helper Functions ---
+    
+    // Checks if an ID is safe against poisoning and denial of wallet attacks
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Identity / Role check - Ensure user matches parent resource UID
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Validates a user profile document
+    function isValidUser(data) {
+      return data.uid == request.auth.uid 
+        && data.email == request.auth.token.email 
+        && request.auth.token.email_verified == true;
+    }
+
+    // Validates the structure and constraints of a Filing Archive
+    function isValidArchive(data) {
+      return data.keys().hasAll(['id', 'taskType', 'createdAt', 'companyInfo', 'documents', 'detectedPlaceholders', 'tasks'])
+        && data.keys().size() == 7
+        && data.id is string
+        && data.id.size() <= 128
+        && data.taskType is string
+        && data.taskType.size() <= 64
+        && data.companyInfo is map
+        && data.companyInfo.keys().hasAll(['name', 'address', 'representative'])
+        && data.companyInfo.keys().size() == 3
+        && data.companyInfo.name is string
+        && data.companyInfo.name.size() <= 200
+        && data.companyInfo.address is string
+        && data.companyInfo.address.size() <= 500
+        && data.companyInfo.representative is string
+        && data.companyInfo.representative.size() <= 100
+        && data.documents is list
+        && data.detectedPlaceholders is list
+        && data.tasks is list;
+    }
+
+    // --- Rules for collections ---
+
+    // User Profile Rules
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create, update: if isOwner(userId) && isValidUser(incoming());
+      allow delete: if false; // Profiles are permanent
+    }
+
+    // Archives Sub-collection Rules
+    match /users/{userId}/archives/{archiveId} {
+      // Secure read: enforce that users can only query their own subcollection
+      allow get, list: if isOwner(userId);
+
+      // Create: user must own, ID must be valid, and body must be valid with correct creation time
+      allow create: if isOwner(userId) 
+        && isValidId(archiveId) 
+        && isValidArchive(incoming()) 
+        && incoming().createdAt == request.time;
+
+      // Update: user must own, body must remain valid, and key immutable fields (id, createdAt) must not change
+      allow update: if isOwner(userId)
+        && isValidArchive(incoming())
+        && incoming().createdAt == existing().createdAt
+        && incoming().id == existing().id;
+
+      // Delete: user must own the parent and child resource
+      allow delete: if isOwner(userId);
+    }
+  }
+}

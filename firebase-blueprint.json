@@ -1,0 +1,97 @@
+{
+  "entities": {
+    "CompanyInfo": {
+      "title": "CompanyInfo",
+      "description": "Information of the company doing corporate registry",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Company name (trade name)" },
+        "address": { "type": "string", "description": "Head office address" },
+        "representative": { "type": "string", "description": "Representative director name" }
+      },
+      "required": ["name", "address", "representative"]
+    },
+    "GeneratedDocument": {
+      "title": "GeneratedDocument",
+      "description": "A single generated corporate registry document",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" }
+      },
+      "required": ["id", "title", "content"]
+    },
+    "Placeholder": {
+      "title": "Placeholder",
+      "description": "Detected placeholders in the document",
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "label": { "type": "string" }
+      },
+      "required": ["key", "label"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "A TODO task in the registry timeline",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "assignee": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "status": { "type": "string", "enum": ["TODO", "IN_PROGRESS", "DONE"] },
+        "isAIRecommended": { "type": "boolean" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "title", "category", "assignee", "dueDate", "status"]
+    },
+    "Archive": {
+      "title": "Archive",
+      "description": "A complete filing archive containing document states and task lists",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "taskType": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "companyInfo": { "$ref": "#/entities/CompanyInfo" },
+        "documents": {
+          "type": "array",
+          "items": { "$ref": "#/entities/GeneratedDocument" }
+        },
+        "detectedPlaceholders": {
+          "type": "array",
+          "items": { "$ref": "#/entities/Placeholder" }
+        },
+        "tasks": {
+          "type": "array",
+          "items": { "$ref": "#/entities/Task" }
+        }
+      },
+      "required": ["id", "taskType", "createdAt", "companyInfo", "documents", "detectedPlaceholders", "tasks"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile with email and initialization timestamp",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Store basic user profile data"
+    },
+    "/users/{userId}/archives/{archiveId}": {
+      "schema": "Archive",
+      "description": "Store filing archives for a specific user"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "商業登記書類生成アシスタント",
+  "description": "インポートされた登記関連資料（PDF、画像、Word、テキスト）をGemini APIで高精度に読み取り、取締役変更、定款変更、本店移転、支店設置などの商業登記申請に必要な各種議事録や登記申請書などの書類テキストを自動生成・プレビュー・編集できるアシスタントシステムです。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
