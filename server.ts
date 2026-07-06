@@ -17,17 +17,9 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 const getGeminiClient = () => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY environment variable is missing.");
+    throw new Error("GEMINI_API_KEY environment variable is missing. Please set it in Settings > Secrets.");
   }
   return new GoogleGenerativeAI(apiKey);
-};
-    apiKey,
-    httpOptions: {
-      headers: {
-        'User-Agent': 'aistudio-build',
-      }
-    }
-  });
 };
 
 // 登記書類生成 API
@@ -63,14 +55,14 @@ app.post("/api/generate-docs", async (req, res) => {
 商業登記申請に必要な以下の3種類の正確な書類テキスト原案を自動生成してください。
 
 【作成すべき3種類の書類】
-1. id: "minutes" -> 登記事由に応じた「株主総会議事録」または「取締役会議事録」または「取締役決定書」（会社法および商業登記規則に厳格に準拠した形式で出力すること）
-2. id: "application" -> 「登記申請書（別紙：登記すべき事項も含む）」（会社名、登記の事由、登記すべき事項、登録免許税、添付書面などを明記すること）
-3. id: "checklist" -> 「必要書類チェックリスト ＆ 手続きガイド」（申請に必要な全添付書類の一覧、用意する人、実印押印の要否、および申請完了までのステップガイドをわかりやすく提示すること）
+1. id: "minutes" -> 登記事由に応じた「株主総会議事録」または「取締役会議事録」または「取締役決定書」
+2. id: "application" -> 「登記申請書（別紙：登記すべき事項も含む）」
+3. id: "checklist" -> 「必要書類チェックリスト ＆ 手続きガイド」
 
 【重要なフォーマット規則】
-- 日付や氏名、本店所在地など、ユーザーが後から確認・入力すべき穴埋め箇所は、必ず "[ 年 月 日 ]" や "[氏名]"、"[会社名]" などのように一貫して「ブラケット [ ]」で括ってください。
-- 生成された書類テキスト (content) はMarkdown形式で、見出しや箇条書きを用いて、視認性が高く、コピペしやすい構造に整理してください。
-- インポートされた資料の一部が欠けている、または読みづらい場合でも、文脈や日本の会社法の標準的な実務から推測して、可能な限り現実に即した暫定案・ドラフトを補完してください。
+- 日付や氏名、本店所在地などは必ずブラケット [ ] で括ること
+- Markdown形式で視認性高く出力すること
+- 不明箇所は推測しつつプレースホルダーを使うこと
 
 【出力JSONスキーマ】
 必ず指定したJSONスキーマに従ってレスポンスを返してください。`;
@@ -81,16 +73,14 @@ app.post("/api/generate-docs", async (req, res) => {
     // ファイルがある場合はパーツに追加
     if (files && Array.isArray(files) && files.length > 0) {
       for (const file of files) {
-        // base64データからプレフィックス（例: data:image/png;base64,）をトリミング
         const base64Data = file.base64.replace(/^data:([^;]+);base64,/, "");
         let mimeType = file.type;
-        
-        // mimeTypeが不明な場合のフォールバック
+
         if (!mimeType) {
           if (file.name.endsWith(".pdf")) mimeType = "application/pdf";
           else if (file.name.endsWith(".png")) mimeType = "image/png";
           else if (file.name.endsWith(".jpg") || file.name.endsWith(".jpeg")) mimeType = "image/jpeg";
-          else mimeType = "image/png"; // デフォルト
+          else mimeType = "image/png";
         }
 
         parts.push({
@@ -111,20 +101,15 @@ app.post("/api/generate-docs", async (req, res) => {
 ${additionalPrompt || "特になし。インポートされた資料を優先して書類を作成してください。"}
 
 【書類作成の指示】
-アップロードされた資料の内容（文字・数値）を一言一句正確に抽出し、それを基盤として：
-1. 取締役の変更、定款変更、本店・支店変更など、申請の種類に最適な「議事録案」（「臨時株主総会議事録」など）
-2. 管轄法務局に提出する「登記申請書案（別紙 登記すべき事項を含む）」
-3. 必要書類チェックリストと手続きフロー
-
-をそれぞれ作成してください。
-日付、商号、氏名、住所、登録免許税、登記にかかる議決権数などの数値、その他の箇所で、インポートされた書類に記述がなく不明な場合は、必ず「[会社名]」「[ 年 月 日 ]」「[氏名]」などのプレースホルダーを記述し、その一覧を detectedPlaceholders に出力してください。
+アップロードされた資料の内容を正確に抽出し、議事録案・申請書案・チェックリストを作成してください。
+不明箇所は必ずプレースホルダーを使い、detectedPlaceholders に一覧を出力してください。
 `;
 
     parts.push({ text: userPrompt });
 
     console.log(`Gemini API calling for task type: ${taskType}, files count: ${files?.length || 0}`);
 
-    // Gemini 3.5 Flashモデルで処理（視覚認識＋高速構造化出力）
+    // Gemini 3.5 Flashモデルで処理
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: { parts },
@@ -132,41 +117,37 @@ ${additionalPrompt || "特になし。インポートされた資料を優先し
         systemInstruction,
         responseMimeType: "application/json",
         responseSchema: {
-  type: SchemaType.OBJECT,
-  properties: {
-    success: { type: SchemaType.BOOLEAN },
-    companyInfo: {
-      type: SchemaType.OBJECT,
-      properties: {
-        name: { type: SchemaType.STRING },
-        address: { type: SchemaType.STRING },
-        representative: { type: SchemaType.STRING }
-      }
-    },
-    documents: {
-      type: SchemaType.ARRAY,
-      items: {
-        type: SchemaType.OBJECT,
-        properties: {
-          id: { type: SchemaType.STRING },
-          title: { type: SchemaType.STRING },
-          content: { type: SchemaType.STRING }
-        }
-      }
-    }
-  }
-}
+          type: SchemaType.OBJECT,
+          properties: {
+            success: { type: SchemaType.BOOLEAN },
+            companyInfo: {
+              type: SchemaType.OBJECT,
+              properties: {
+                name: { type: SchemaType.STRING },
+                address: { type: SchemaType.STRING },
+                representative: { type: SchemaType.STRING }
+              },
+              required: ["name", "address", "representative"]
+            },
+            documents: {
+              type: SchemaType.ARRAY,
+              items: {
+                type: SchemaType.OBJECT,
+                properties: {
+                  id: { type: SchemaType.STRING },
+                  title: { type: SchemaType.STRING },
+                  content: { type: SchemaType.STRING }
+                },
                 required: ["id", "title", "content"]
               }
             },
             detectedPlaceholders: {
-              type: Type.ARRAY,
-              description: "書類内で使用したプレースホルダー（穴埋め項目）のキーとラベルの一覧。",
+              type: SchemaType.ARRAY,
               items: {
-                type: Type.OBJECT,
+                type: SchemaType.OBJECT,
                 properties: {
-                  key: { type: Type.STRING, description: "プレースホルダーのキー。書類内の文字列と完全に一致するもの。例: '[代表取締役 氏名]', '[ 年 月 日 ]', '[本店所在地]'" },
-                  label: { type: Type.STRING, description: "ユーザー向けの入力欄ラベル。例: '代表取締役 氏名', '登記日（決議日）', '新しい本店所在地'" }
+                  key: { type: SchemaType.STRING },
+                  label: { type: SchemaType.STRING }
                 },
                 required: ["key", "label"]
               }
