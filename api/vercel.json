@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/generate-docs.ts": {
-      "runtime": "edge"
-    }
-  }
-}
