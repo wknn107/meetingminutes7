@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -17,9 +17,10 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 const getGeminiClient = () => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY environment variable is missing. Please set it in Settings > Secrets.");
+    throw new Error("GEMINI_API_KEY environment variable is missing.");
   }
-  return new GoogleGenAI({
+  return new GoogleGenerativeAI(apiKey);
+};
     apiKey,
     httpOptions: {
       headers: {
@@ -131,28 +132,30 @@ ${additionalPrompt || "特になし。インポートされた資料を優先し
         systemInstruction,
         responseMimeType: "application/json",
         responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            success: { type: Type.BOOLEAN },
-            companyInfo: {
-              type: Type.OBJECT,
-              properties: {
-                name: { type: Type.STRING, description: "抽出された会社名（商号）。不明な場合は空文字" },
-                address: { type: Type.STRING, description: "抽出された本店所在地。不明な場合は空文字" },
-                representative: { type: Type.STRING, description: "抽出された代表取締役氏名。不明な場合は空文字" }
-              },
-              required: ["name", "address", "representative"]
-            },
-            documents: {
-              type: Type.ARRAY,
-              description: "生成された書類のリスト。'minutes'、'application'、'checklist' の3つのidを必ず含めること。",
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  id: { type: Type.STRING, description: "書類ID（'minutes'、'application'、'checklist'のいずれか）" },
-                  title: { type: Type.STRING, description: "書類の名称。例: '臨時株主総会議事録', '取締役決定書', '株式会社変更登記申請書' など" },
-                  content: { type: Type.STRING, description: "Markdown形式の書類原案。穴埋めが必要な箇所は必ずブラケット[ ]で囲んでください。例: '[ 年 月 日 ]', '[代表取締役 氏名]'" }
-                },
+  type: SchemaType.OBJECT,
+  properties: {
+    success: { type: SchemaType.BOOLEAN },
+    companyInfo: {
+      type: SchemaType.OBJECT,
+      properties: {
+        name: { type: SchemaType.STRING },
+        address: { type: SchemaType.STRING },
+        representative: { type: SchemaType.STRING }
+      }
+    },
+    documents: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          id: { type: SchemaType.STRING },
+          title: { type: SchemaType.STRING },
+          content: { type: SchemaType.STRING }
+        }
+      }
+    }
+  }
+}
                 required: ["id", "title", "content"]
               }
             },
