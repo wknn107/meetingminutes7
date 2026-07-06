@@ -2,8 +2,6 @@ export const config = {
   runtime: "edge",
 };
 
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
-
 export default async function handler(req: Request) {
   try {
     const body = await req.json();
@@ -17,8 +15,7 @@ export default async function handler(req: Request) {
       );
     }
 
-    const ai = new GoogleGenerativeAI(apiKey);
-
+    // 役割名の変換
     let taskName = "商業登記変更";
     if (taskType === "DIRECTOR_CHANGE") taskName = "役員変更";
     else if (taskType === "ARTICLES_CHANGE") taskName = "定款変更";
@@ -30,6 +27,7 @@ export default async function handler(req: Request) {
 アップロードされた資料を読み取り、登記申請に必要な書類を生成してください。
 `;
 
+    // Gemini API に送る parts を作成
     const parts: any[] = [];
 
     if (files && Array.isArray(files)) {
@@ -51,65 +49,37 @@ export default async function handler(req: Request) {
 `,
     });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
-      contents: [
-        {
-          role: "user",
-          parts,
+    // fetch で Gemini API を呼ぶ（Edge Runtime で確実に動く）
+    const geminiRes = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ],
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: SchemaType.OBJECT,
-          properties: {
-            success: { type: SchemaType.BOOLEAN },
-            companyInfo: {
-              type: SchemaType.OBJECT,
-              properties: {
-                name: { type: SchemaType.STRING },
-                address: { type: SchemaType.STRING },
-                representative: { type: SchemaType.STRING },
-              },
-              required: ["name", "address", "representative"],
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts,
             },
-            documents: {
-              type: SchemaType.ARRAY,
-              items: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  id: { type: SchemaType.STRING },
-                  title: { type: SchemaType.STRING },
-                  content: { type: SchemaType.STRING },
-                },
-                required: ["id", "title", "content"],
-              },
-            },
-            detectedPlaceholders: {
-              type: SchemaType.ARRAY,
-              items: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  key: { type: SchemaType.STRING },
-                  label: { type: SchemaType.STRING },
-                },
-                required: ["key", "label"],
-              },
-            },
+          ],
+          systemInstruction,
+          generationConfig: {
+            responseMimeType: "application/json",
           },
-          required: ["success", "companyInfo", "documents", "detectedPlaceholders"],
-        },
-      },
-    });
+        }),
+      }
+    );
 
-    const resultText = response.text;
-    if (!resultText) {
-      throw new Error("Geminiから有効なレスポンスが返されませんでした。");
+    if (!geminiRes.ok) {
+      const errText = await geminiRes.text();
+      throw new Error("Gemini API エラー: " + errText);
     }
 
-    return new Response(resultText, {
+    const result = await geminiRes.json();
+
+    return new Response(JSON.stringify(result), {
       headers: { "Content-Type": "application/json" },
     });
   } catch (error: any) {
