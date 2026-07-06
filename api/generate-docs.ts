@@ -1,3 +1,7 @@
+export const config = {
+  runtime: "edge",
+};
+
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
 export const config = {
