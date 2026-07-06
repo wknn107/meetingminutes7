@@ -49,7 +49,7 @@ export default async function handler(req: Request) {
 
     // 最新の REST API エンドポイント（generate）
     const geminiRes = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generate?key=" + apiKey,
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey
       {
         method: "POST",
         headers: {
