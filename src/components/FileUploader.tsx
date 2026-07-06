@@ -21,6 +21,7 @@ export default function FileUploader({ files, onChange }: FileUploaderProps) {
             type: file.type,
             base64: reader.result as string,
             size: file.size,
+            rawFile: file,   // ← 追加（40〜60行目）
           });
         };
         reader.onerror = () => reject(new Error("ファイルの読み込みに失敗しました。"));
