@@ -4,10 +4,6 @@ export const config = {
 
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 
-export const config = {
-  runtime: "edge",
-};
-
 export default async function handler(req: Request) {
   try {
     const body = await req.json();
