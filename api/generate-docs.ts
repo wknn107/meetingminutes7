@@ -15,7 +15,6 @@ export default async function handler(req: Request) {
       );
     }
 
-    // 役割名の変換
     let taskName = "商業登記変更";
     if (taskType === "DIRECTOR_CHANGE") taskName = "役員変更";
     else if (taskType === "ARTICLES_CHANGE") taskName = "定款変更";
@@ -27,7 +26,6 @@ export default async function handler(req: Request) {
 アップロードされた資料を読み取り、登記申請に必要な書類を生成してください。
 `;
 
-    // Gemini API に送る parts を作成
     const parts: any[] = [];
 
     if (files && Array.isArray(files)) {
@@ -49,9 +47,9 @@ export default async function handler(req: Request) {
 `,
     });
 
-    // fetch で Gemini API を呼ぶ（Edge Runtime で確実に動く）
+    // 最新の REST API エンドポイント（generate）
     const geminiRes = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey,
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generate?key=" + apiKey,
       {
         method: "POST",
         headers: {
