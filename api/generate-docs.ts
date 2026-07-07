@@ -61,17 +61,23 @@ export default async function handler(req: Request) {
       }
     );
 
-    const result = await geminiRes.json();
+　　const result = await geminiRes.json();
 
+if (!geminiRes.ok) {
+  return new Response(
+    JSON.stringify({ error: result.error?.message || "Gemini API error" }),
+    { status: geminiRes.status, headers: { "Content-Type": "application/json" } }
+  );
+}
+    
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: { "Content-Type": "application/json" }
     });
-
-  } catch (err: any) {
-    return new Response(
-      JSON.stringify({ error: err.message || "サーバーエラーが発生しました。" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+　} catch (err: any) {
+  return new Response(
+    JSON.stringify({ error: String(err.message || err) }),
+    { status: 500, headers: { "Content-Type": "application/json" } }
+  );
 }
+  
