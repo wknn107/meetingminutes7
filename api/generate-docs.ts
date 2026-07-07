@@ -4,6 +4,7 @@ export const config = {
 
 export default async function handler(req: Request) {
   try {
+    // フロントから送られた FormData を取得
     const form = await req.formData();
     const file = form.get("file") as File;
 
@@ -14,7 +15,7 @@ export default async function handler(req: Request) {
       );
     }
 
-    // File → ArrayBuffer → Base64
+    // File → Base64 変換
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
 
@@ -24,7 +25,7 @@ export default async function handler(req: Request) {
     }
     const base64File = btoa(binary);
 
-    // Gemini API 呼び出し
+    // APIキー取得（GEMINI_API_KEY を使用）
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return new Response(
@@ -33,6 +34,7 @@ export default async function handler(req: Request) {
       );
     }
 
+    // Gemini API 呼び出し
     const geminiRes = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
