@@ -381,12 +381,16 @@ export default function App() {
     setError(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", uploadedFiles[0].rawFile);
-      
       const response = await fetch("/api/generate-docs", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          files: uploadedFiles,
+          taskType,
+          additionalPrompt,
+        }),
       });
 
       if (!response.ok) {
