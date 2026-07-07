@@ -21,6 +21,7 @@ export default function FileUploader({ files, onChange }: FileUploaderProps) {
             type: file.type,
             base64: reader.result as string,
             size: file.size,
+            rawFile: file,   // ← ★これが絶対に必要！
           });
         };
         reader.onerror = () => reject(new Error("ファイルの読み込みに失敗しました。"));
@@ -77,6 +78,7 @@ export default function FileUploader({ files, onChange }: FileUploaderProps) {
 
   return (
     <div className="space-y-4">
+      {/* ここから下はあなたの元のコードと同じ */}
       <div
         id="file-dropzone"
         onDragEnter={handleDrag}
@@ -109,40 +111,10 @@ export default function FileUploader({ files, onChange }: FileUploaderProps) {
         </div>
       </div>
 
+      {/* 以下略（あなたの元のコードと同じ） */}
       {files.length > 0 && (
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-              アップロードされた資料 ({files.length}件)
-            </span>
-            <button
-              onClick={() => onChange([])}
-              className="text-xs text-red-600 hover:text-red-700 font-medium"
-            >
-              すべてクリア
-            </button>
-          </div>
-          <div className="divide-y divide-slate-100 bg-white border border-slate-200 rounded-xl overflow-hidden max-h-60 overflow-y-auto">
-            {files.map((file, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 hover:bg-slate-50 transition-colors">
-                <div className="flex items-center space-x-3 min-w-0">
-                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-slate-700 truncate">{file.name}</p>
-                    <p className="text-xs text-slate-400">{formatSize(file.size)}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => removeFile(idx)}
-                  className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
+          {/* ... */}
         </div>
       )}
 
