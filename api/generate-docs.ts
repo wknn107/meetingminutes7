@@ -25,7 +25,7 @@ export default async function handler(req: Request) {
     const base64File = btoa(binary);
 
     // Gemini API 呼び出し
-    const apiKey = process.env.GOOGLE_API_KEY;
+    const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return new Response(
         JSON.stringify({ error: "APIキーが設定されていません。" }),
