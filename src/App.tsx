@@ -127,8 +127,12 @@ export default function App() {
   const handleSignIn = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Unknown error");
+       }
+
       const localSaved = localStorage.getItem("commercial_registry_archives");
       if (localSaved) {
         const localArchives: FilingArchive[] = JSON.parse(localSaved);
