@@ -3,6 +3,7 @@ export interface UploadedFile {
   type: string;
   base64: string; // inline data
   size: number;
+  rawFile: File;   // ← 追加
 }
 
 export interface CompanyInfo {
