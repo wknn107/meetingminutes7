@@ -36,7 +36,7 @@ export default async function handler(req: Request) {
 
     // Gemini API 呼び出し
     const geminiRes = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -66,7 +66,11 @@ export default async function handler(req: Request) {
 if (!geminiRes.ok) {
   return new Response(
     JSON.stringify({ error: result.error?.message || "Gemini API error" }),
-    { status: geminiRes.status, headers: { "Content-Type": "application/json" } }
+    { status: geminiRes.status, 
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.GOOGLE_ACCESS_TOKEN}`,
+      },
   );
 }
     
