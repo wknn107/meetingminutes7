@@ -25,21 +25,24 @@ export default async function handler(req: Request) {
     }
     const base64File = btoa(binary);
 
-    // APIキー取得（GEMINI_API_KEY を使用）
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    // OAuth 2 Access Token を取得
+    const accessToken = process.env.GOOGLE_ACCESS_TOKEN;
+    if (!accessToken) {
       return new Response(
-        JSON.stringify({ error: "APIキーが設定されていません。" }),
-        { status: 500, headers: { "Content-Type": "application/json" } }
+        JSON.stringify({ error: "GOOGLE_ACCESS_TOKEN が設定されていません。" }),
+        { status: 401, headers: { "Content-Type": "application/json" } }
       );
     }
 
-    // Gemini API 呼び出し
+    // Gemini API 呼び出し（Bearer 認証）
     const geminiRes = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({
           contents: [
             {
@@ -61,27 +64,28 @@ export default async function handler(req: Request) {
       }
     );
 
-　　const result = await geminiRes.json();
+    const result = await geminiRes.json();
 
-if (!geminiRes.ok) {
-  return new Response(
-    JSON.stringify({ error: result.error?.message || "Gemini API error" }),
-    { status: geminiRes.status, 
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.GOOGLE_ACCESS_TOKEN}`,
-      },
-  );
-}
-    
+    // Gemini API がエラーを返した場合
+    if (!geminiRes.ok) {
+      return new Response(
+        JSON.stringify({
+          error: result.error?.message || "Gemini API エラーが発生しました。"
+        }),
+        { status: geminiRes.status, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // 正常レスポンス
     return new Response(JSON.stringify(result), {
       status: 200,
       headers: { "Content-Type": "application/json" }
     });
-　} catch (err: any) {
-  return new Response(
-    JSON.stringify({ error: String(err.message || err) }),
-    { status: 500, headers: { "Content-Type": "application/json" } }
-  );
+
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ error: String(err.message || err) }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
 }
-  
