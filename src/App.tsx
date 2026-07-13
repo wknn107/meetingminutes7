@@ -37,7 +37,7 @@ import { collection, doc, setDoc, getDocs, deleteDoc, query, where } from "fireb
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"generate" | "editor" | "todo" | "archive">("generate");
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [taskType, setTaskType] = useState<TaskType>("DIRECTOR_CHANGE");
   const [additionalPrompt, setAdditionalPrompt] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
