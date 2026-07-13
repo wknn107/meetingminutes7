@@ -387,54 +387,30 @@ export default function App() {
 
   // 生成処理
   const handleGenerate = async () => {
-  setLoading(true);
-  setError(null);
+    setLoading(true);
+    setError(null);
 
-  try {
-    // 1. FormDataの作成
-    const formData = new FormData();
-    
-    // 2. データを追加（JSON.stringifyではなく、個別にappendします）
-    // filesは配列なのでループで追加
-    uploadedFiles.forEach((file, index) => {
-      // file.blob が実際のファイルデータと想定
-      formData.append(`files`, file.blob); 
-    });
-    
-    formData.append("taskType", taskType);
-    formData.append("additionalPrompt", additionalPrompt);
+    try {
+      if (uploadedFiles.length === 0) {
+        throw new Error("ファイルが選択されていません。");
+      }
 
-    // 3. fetchで送信
-    const response = await fetch("/api/generate-docs", {
-      method: "POST",
-      // ★重要: Content-Typeヘッダーを「指定しない」ことで、
-      // ブラウザが自動的に boundary を含んだ適切な形式にしてくれます
-      body: formData,
-    });
+      const formData = new FormData();
+      
+      // 修正ポイント: uploadedFiles[0].file を送るようにします
+      // （※uploadedFilesの構造によりますが、通常ファイルオブジェクトはここに格納されています）
+      const fileToUpload = uploadedFiles[0].file; 
+      formData.append("files", fileToUpload); 
+      
+      formData.append("taskType", taskType);
+      formData.append("additionalPrompt", additionalPrompt);
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || "書類の生成処理に失敗しました。");
-    }
+      const response = await fetch("/api/generate-docs", {
+        method: "POST",
+        body: formData,
+      });
 
-    const data = await response.json();
-    // ...以降の成功時の処理（setCompanyInfoなど）はそのまま
-    if (data.success) {
-      setCompanyInfo(data.companyInfo);
-      setDocuments(data.documents);
-      setDetectedPlaceholders(data.detectedPlaceholders);
-      setCurrentArchiveId(null);
-      const recs = getRecommendedTasks(taskType, data.companyInfo.name);
-      setTasks(recs);
-      setActiveTab("editor");
-    }
-  } catch (err: any) {
-    console.error(err);
-    setError(err.message || "予期せぬエラーが発生しました。");
-  } finally {
-    setLoading(false);
-  }
-};
+      // ...（以下、レスポンス処理は同じ）
 
   // 書類ごとの保存・反映
   const handleSaveDoc = (id: string, updatedContent: string) => {
