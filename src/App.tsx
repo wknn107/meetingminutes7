@@ -386,31 +386,51 @@ export default function App() {
   };
 
   // 生成処理
-  console.log("アップロードされたファイルの中身:", uploadedFiles);const handleGenerate = async () => {
+ const handleGenerate = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      if (uploadedFiles.length === 0) {
-        throw new Error("ファイルが選択されていません。");
-      }
-
-      const formData = new FormData();
-      
-      // 修正ポイント: uploadedFiles[0].file を送るようにします
-      // （※uploadedFilesの構造によりますが、通常ファイルオブジェクトはここに格納されています）
-      const fileToUpload = uploadedFiles[0].file; 
-      formData.append("files", fileToUpload); 
-      
-      formData.append("taskType", taskType);
-      formData.append("additionalPrompt", additionalPrompt);
-
       const response = await fetch("/api/generate-docs", {
         method: "POST",
-        body: formData,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          files: uploadedFiles,
+          taskType,
+          additionalPrompt,
+        }),
       });
 
-      // ...（以下、レスポンス処理は同じ）
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || "書類の生成処理に失敗しました。");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setCompanyInfo(data.companyInfo);
+        setDocuments(data.documents);
+        setDetectedPlaceholders(data.detectedPlaceholders);
+        setCurrentArchiveId(null);
+
+        // 登記種別に応じたTODOリストの初期化（AIおすすめと合体）
+        const recs = getRecommendedTasks(taskType, data.companyInfo.name);
+        setTasks(recs);
+
+        // 自動的にドキュメントエディタタブへ遷移
+        setActiveTab("editor");
+      } else {
+        throw new Error(data.error || "書類を正常に生成できませんでした。");
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "予期せぬエラーが発生しました。");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 書類ごとの保存・反映
   const handleSaveDoc = (id: string, updatedContent: string) => {
