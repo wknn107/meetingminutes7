@@ -386,7 +386,6 @@ export default function App() {
   };
 
   // 生成処理
-  console.log(uploadedFiles);
   const handleGenerate = async () => {
   setLoading(true);
   setError(null);
