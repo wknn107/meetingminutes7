@@ -386,7 +386,7 @@ export default function App() {
   };
 
   // 生成処理
-  const handleGenerate = async () => {
+  console.log("アップロードされたファイルの中身:", uploadedFiles);const handleGenerate = async () => {
     setLoading(true);
     setError(null);
 
