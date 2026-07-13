@@ -387,50 +387,54 @@ export default function App() {
 
   // 生成処理
   const handleGenerate = async () => {
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    try {
-      const response = await fetch("/api/generate-docs", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          files: uploadedFiles,
-          taskType,
-          additionalPrompt,
-        }),
-      });
+  try {
+    // 1. FormDataの作成
+    const formData = new FormData();
+    
+    // 2. データを追加（JSON.stringifyではなく、個別にappendします）
+    // filesは配列なのでループで追加
+    uploadedFiles.forEach((file, index) => {
+      // file.blob が実際のファイルデータと想定
+      formData.append(`files`, file.blob); 
+    });
+    
+    formData.append("taskType", taskType);
+    formData.append("additionalPrompt", additionalPrompt);
 
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.error || "書類の生成処理に失敗しました。");
-      }
+    // 3. fetchで送信
+    const response = await fetch("/api/generate-docs", {
+      method: "POST",
+      // ★重要: Content-Typeヘッダーを「指定しない」ことで、
+      // ブラウザが自動的に boundary を含んだ適切な形式にしてくれます
+      body: formData,
+    });
 
-      const data = await response.json();
-      if (data.success) {
-        setCompanyInfo(data.companyInfo);
-        setDocuments(data.documents);
-        setDetectedPlaceholders(data.detectedPlaceholders);
-        setCurrentArchiveId(null);
-
-        // 登記種別に応じたTODOリストの初期化（AIおすすめと合体）
-        const recs = getRecommendedTasks(taskType, data.companyInfo.name);
-        setTasks(recs);
-
-        // 自動的にドキュメントエディタタブへ遷移
-        setActiveTab("editor");
-      } else {
-        throw new Error(data.error || "書類を正常に生成できませんでした。");
-      }
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "予期せぬエラーが発生しました。");
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || "書類の生成処理に失敗しました。");
     }
-  };
+
+    const data = await response.json();
+    // ...以降の成功時の処理（setCompanyInfoなど）はそのまま
+    if (data.success) {
+      setCompanyInfo(data.companyInfo);
+      setDocuments(data.documents);
+      setDetectedPlaceholders(data.detectedPlaceholders);
+      setCurrentArchiveId(null);
+      const recs = getRecommendedTasks(taskType, data.companyInfo.name);
+      setTasks(recs);
+      setActiveTab("editor");
+    }
+  } catch (err: any) {
+    console.error(err);
+    setError(err.message || "予期せぬエラーが発生しました。");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // 書類ごとの保存・反映
   const handleSaveDoc = (id: string, updatedContent: string) => {
