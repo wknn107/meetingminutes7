@@ -392,7 +392,7 @@ export default function App() {
     
 　console.log("【診断】アップロードされたファイルのリスト:", uploadedFile);
   if (uploadedFile.length > 0) {
-    console.log("【診断】最初のファイルの中身:", uploadedFiles[0]);
+    console.log("【診断】最初のファイルの中身:", uploadedFile[0]);
   }
   
   try {
@@ -841,7 +841,7 @@ export default function App() {
                   </div>
 
                   {/* ファイルアップローダー */}
-                  <FileUploader files={uploadedFiles} onChange={setUploadedFiles} />
+                  <FileUploader file={uploadedFile} onChange={setUploadedFile} />
 
                   <div className="border-b border-slate-100 pb-3 pt-2 flex items-center">
                     <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
