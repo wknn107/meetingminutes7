@@ -401,7 +401,7 @@ export default function App() {
 
 
     // ファイルを FormData に追加
-    uploadedFiles.forEach((file) => {
+    uploadedFiles.forEach((files) => {
       formData.append("file", uploadedFiles[0]);// File オブジェクト
     });
 
