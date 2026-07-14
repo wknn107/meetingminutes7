@@ -835,7 +835,7 @@ export default function App() {
                   </div>
 
                   {/* ファイルアップローダー */}
-                  <FileUploader file={uploadedFiles} onChange={setUploadedFiles} />
+                  <FileUploader files={uploadedFiles} onChange={setUploadedFiles} />
 
                   <div className="border-b border-slate-100 pb-3 pt-2 flex items-center">
                     <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
