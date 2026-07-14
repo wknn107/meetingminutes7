@@ -2,15 +2,14 @@ export const config = { runtime: "edge" };
 
 export default async function handler(req: Request) {
   try {
-    // 1. フロントから送られてきたデータを受け取る
     const form = await req.formData();
-    const file = form.get("file") as File; // "file" という名前で送られてくる前提
+    const file = form.get("file") as File;
 
     if (!file) {
       return new Response(JSON.stringify({ error: "ファイルがありません" }), { status: 400 });
     }
 
-    // 2. ファイルをBase64文字列に変換（ここが重要！）
+    // PDF → Base64
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
     let binary = "";
@@ -19,8 +18,11 @@ export default async function handler(req: Request) {
     }
     const base64File = btoa(binary);
 
-    // 3. Geminiに送るデータを組み立てる（JSON形式）
     const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return new Response(JSON.stringify({ error: "APIキーが設定されていません" }), { status: 400 });
+    }
+
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
