@@ -37,7 +37,7 @@ import { collection, doc, setDoc, getDocs, deleteDoc, query, where } from "fireb
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"generate" | "editor" | "todo" | "archive">("generate");
-  const [uploadedFiles, setUploadedFile] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [taskType, setTaskType] = useState<TaskType>("DIRECTOR_CHANGE");
   const [additionalPrompt, setAdditionalPrompt] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -841,7 +841,7 @@ export default function App() {
                   </div>
 
                   {/* ファイルアップローダー */}
-                  <FileUploader file={uploadedFiles} onChange={setUploadedFile} />
+                  <FileUploader file={uploadedFiles} onChange={setUploadedFiles} />
 
                   <div className="border-b border-slate-100 pb-3 pt-2 flex items-center">
                     <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
