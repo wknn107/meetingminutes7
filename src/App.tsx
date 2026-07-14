@@ -399,12 +399,6 @@ export default function App() {
     const formData = new FormData();
 　　formData.append("file", uploadedFiles[0]); // 1つだけ送る
 
-
-    // ファイルを FormData に追加
-    uploadedFiles.forEach((files) => {
-      formData.append("file", uploadedFiles[0]);// File オブジェクト
-    });
-
     // 追加情報も FormData に入れる
     formData.append("taskType", taskType);
     formData.append("additionalPrompt", additionalPrompt || "");
