@@ -2,6 +2,7 @@ export const config = { runtime: "edge" };
 
 export default async function handler(req: Request) {
   try {
+    // 1. フロントから送られてきた FormData を取得
     const form = await req.formData();
     const file = form.get("file") as File;
 
@@ -9,43 +10,52 @@ export default async function handler(req: Request) {
       return new Response(JSON.stringify({ error: "ファイルがありません" }), { status: 400 });
     }
 
-    // PDF → Base64
+    // 2. PDF → Base64（Edge Runtime で壊れない方法）
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
+
     let binary = "";
     for (let i = 0; i < bytes.byteLength; i++) {
       binary += String.fromCharCode(bytes[i]);
     }
-    const base64File = btoa(binary);
 
+    const base64File = btoa(binary); // Edge Runtime で安全に動く
+
+    // 3. APIキー確認
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return new Response(JSON.stringify({ error: "APIキーが設定されていません" }), { status: 400 });
     }
 
+    // 4. Google AI Studio REST API に送信
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          contents: [{
-            role: "user",
-            parts: [
-              { text: "以下のPDFを解析して商業登記書類を生成してください。" },
-              {
-                inline_data: {
-                  mime_type: file.type,
-                  data: base64File
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: "以下のPDFを解析して商業登記書類を生成してください。"
+                },
+                {
+                  inline_data: {
+                    mime_type: file.type,
+                    data: base64File
+                  }
                 }
-              }
-            ]
-          }]
+              ]
+            }
+          ]
         })
       }
     );
 
     const result = await response.json();
+
     return new Response(JSON.stringify(result), { status: 200 });
 
   } catch (err: any) {
