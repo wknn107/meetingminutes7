@@ -397,7 +397,7 @@ export default function App() {
   
   try {
     const formData = new FormData();
-　　formData.append("file", uploadedFile[0]); // 1つだけ送る
+　　formData.append("file", uploadedFiles[0]); // 1つだけ送る
 
 
     // ファイルを FormData に追加
