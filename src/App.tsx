@@ -386,11 +386,15 @@ export default function App() {
   };
 
   // 生成処理
- console.log(uploadedFiles);
   const handleGenerate = async () => {
   setLoading(true);
   setError(null);
-
+    
+　console.log("【診断】アップロードされたファイルのリスト:", uploadedFiles);
+  if (uploadedFiles.length > 0) {
+    console.log("【診断】最初のファイルの中身:", uploadedFiles[0]);
+  }
+  
   try {
     const formData = new FormData();
 
