@@ -37,7 +37,7 @@ import { collection, doc, setDoc, getDocs, deleteDoc, query, where } from "fireb
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<"generate" | "editor" | "todo" | "archive">("generate");
-  const [uploadedFile, setUploadedFile] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFile] = useState<File[]>([]);
   const [taskType, setTaskType] = useState<TaskType>("DIRECTOR_CHANGE");
   const [additionalPrompt, setAdditionalPrompt] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
@@ -391,8 +391,8 @@ export default function App() {
   setError(null);
     
 　console.log("【診断】アップロードされたファイルのリスト:", uploadedFile);
-  if (uploadedFile.length > 0) {
-    console.log("【診断】最初のファイルの中身:", uploadedFile[0]);
+  if (uploadedFiles.length > 0) {
+    console.log("【診断】最初のファイルの中身:", uploadedFiles[0]);
   }
   
   try {
@@ -401,8 +401,8 @@ export default function App() {
 
 
     // ファイルを FormData に追加
-    uploadedFile.forEach((file) => {
-      formData.append("file", uploadedFile[0]);// File オブジェクト
+    uploadedFiles.forEach((file) => {
+      formData.append("file", uploadedFiles[0]);// File オブジェクト
     });
 
     // 追加情報も FormData に入れる
