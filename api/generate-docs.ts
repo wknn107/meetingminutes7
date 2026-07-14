@@ -55,6 +55,11 @@ export default async function handler(req: Request) {
     return new Response(JSON.stringify(result), { status: 200 });
 
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
-  }
+  const message = typeof err === "string"
+    ? err
+    : err?.message || JSON.stringify(err);
+
+  return new Response(JSON.stringify({ error: message }), { status: 500 });
+}
+
 }
