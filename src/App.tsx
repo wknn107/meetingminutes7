@@ -22,7 +22,7 @@ import {
   Download
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { UploadedFile, CompanyInfo, GeneratedDocument, TaskType } from "./types";
+import { UploadedFiles, CompanyInfo, GeneratedDocument, TaskType } from "./types";
 import FileUploader from "./components/FileUploader";
 import DocEditor from "./components/DocEditor";
 import TaskBoard, { Task } from "./components/TaskBoard";
@@ -390,7 +390,7 @@ export default function App() {
   setLoading(true);
   setError(null);
     
-　console.log("【診断】アップロードされたファイルのリスト:", uploadedFile);
+　console.log("【診断】アップロードされたファイルのリスト:", uploadedFiles);
   if (uploadedFiles.length > 0) {
     console.log("【診断】最初のファイルの中身:", uploadedFiles[0]);
   }
@@ -841,7 +841,7 @@ export default function App() {
                   </div>
 
                   {/* ファイルアップローダー */}
-                  <FileUploader file={uploadedFile} onChange={setUploadedFile} />
+                  <FileUploader file={uploadedFiles} onChange={setUploadedFile} />
 
                   <div className="border-b border-slate-100 pb-3 pt-2 flex items-center">
                     <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
