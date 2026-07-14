@@ -415,15 +415,16 @@ export default function App() {
     });
 
     if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
+  　　　　const errData = await response.json().catch(() => ({}));
 
-      const message =
-        typeof errData.error === "string"
-          ? errData.error
-          : JSON.stringify(errData.error);
+ 　　　　 const message =
+  　　　　  typeof errData.error === "string"
+    　　　　  ? errData.error
+    　　　　  : JSON.stringify(errData.error);
 
-      throw new Error(message || "書類の生成処理に失敗しました。");
-    }
+　　　　  throw new Error(message || "書類の生成処理に失敗しました。");
+　　　　}
+
 
     const data = await response.json();
     if (data.success) {
